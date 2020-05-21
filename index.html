@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+   <meta charset="utf-8">
+
+   <title>Promise API
+      async/await
+   </title>
+
+   <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+   <meta name="author" content="Hakim El Hattab">
+
+   <meta name="apple-mobile-web-app-capable" content="yes" />
+   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+   <link rel="stylesheet" href="css/reveal.min.css">
+   <link rel="stylesheet" href="css/theme/beige.css" id="theme">
+
+   <!-- For syntax highlighting -->
+   <link rel="stylesheet" href="lib/css/zenburn.css">
+
+   <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+   <script>
+      document.write('<link rel="stylesheet" href="css/print/' + (window.location.search.match(/print-pdf/gi) ? 'pdf' : 'paper') + '.css" type="text/css" media="print">');
+   </script>
+
+   <!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+</head>
+
+<body>
+
+   <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+
+
+         <section>
+            <h1>Promise API</h1>
+            <h1>async/await</h1>
+            <p>
+               <small>Created by <a href="https://github.com/sidoroval163">@sidoroval163</a></small>
+            </p>
+         </section>
+
+
+         <section>
+            <h2>Contents</h2>
+            <ul>
+               <li class="fragment">Promise in js - what is it?</li>
+               <li class="fragment">Promise API and his five friends</li>
+               <li class="fragment">Mystification is not about Promisification </li>
+               <li class="fragment">little BIG Microtasks </li>
+               <li class="fragment">You already can't wait? Its time for async/await </li>
+            </ul>
+         </section>
+
+
+         <section>
+            <section data-markdown>
+               <script type="text/template">
+            # Promise in js
+            # what is it?</script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+                 <p> The constructor syntax for a promise object is:</p>
+
+                const promise = new Promise(function(resolve, reject) {
+                // executor (the producing code, "singer")
+                });
+                                       </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+                  ![mockup](images/promise-resolve-reject.png)
+                                       </script>
+            </section>
+
+            <section data-markdown>
+               <script type="text/template">
+                  <h2> Consumers: then, catch, finally</h2>
+                                      
+                                         
+                                      
+
+                                       </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+
+            promise.then(
+            function(result) { /* handle a successful result */ },
+            function(error) { /* handle an error */ }
+            );
+                                      
+
+                                       </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+
+            const promise = new Promise((resolve, reject) => {
+            setTimeout(() => reject(new Error("Whoops!")), 1000);
+            });
+             
+            // .catch(f) is the same as promise.then(null, f)
+            promise.catch(alert); // shows "Error: Whoops!" after 1 second
+                                       </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+
+            new Promise((resolve, reject) => {
+            /* do something that takes time, and then call resolve/reject */
+            })
+            // runs when the promise is settled, doesn't matter successfully or not
+            .finally(() => stop loading indicator)
+            .then(result => show result, err => show error)
+                                      
+
+                                       </script>
+            </section>
+         </section>
+
+
+         <section>
+            <section data-markdown>
+               <script type="text/template">
+                                          # Promise API 
+                                          # and his five friends
+                                       </script>
+            </section>
+
+            <section data-markdown>
+               <script type="text/template">
+                                          <h2>Promise.all</h2>
+            let promise = Promise.all([...promises...]);
+
+
+      Promise.all([
+      new Promise(resolve => setTimeout(() => resolve(1), 3000)), // 1
+      new Promise(resolve => setTimeout(() => resolve(2), 2000)), // 2
+      new Promise(resolve => setTimeout(() => resolve(3), 1000))  // 3
+      ]).then(alert); 
+      // 1,2,3 when promises are ready: each promise contributes an array member
+                                       </script>
+            </section>
+
+            <section data-markdown>
+               <script type="text/template">
+                                          <h2>Promise.allSettled</h2>
+         const urls = [
+         'https://api.github.com/users/iliakan',
+         'https://api.github.com/users/remy',
+         'https://no-such-url'
+       ];
+       
+       Promise.allSettled(urls.map(url => fetch(url)))
+         .then(results => { // (*)
+           results.forEach((result, num) => {
+             if (result.status == "fulfilled") {
+               alert(`${urls[num]}: ${result.value.status}`);
+             }
+             if (result.status == "rejected") {
+               alert(`${urls[num]}: ${result.reason}`);
+             }
+           });
+         });
+                                          <p>The results in the line (*) above will be:</p>
+       
+       [
+         {status: 'fulfilled', value: ...response...},
+         {status: 'fulfilled', value: ...response...},
+         {status: 'rejected', reason: ...error object...}
+       ]
+                                       </script>
+            </section>
+
+            <section data-markdown>
+               <script type="text/template">
+                                          <h2>Promise.race</h2>
+            const promise = Promise.race(iterable);
+                                          <p>For instance, here the result will be 1:</p>
+            
+      Promise.race([
+        new Promise((resolve, reject) => setTimeout(() => resolve(1), 1000)),
+        new Promise((resolve, reject) => setTimeout(() => reject(new Error("Whoops!")), 2000)),
+        new Promise((resolve, reject) => setTimeout(() => resolve(3), 3000))
+      ]).then(alert); // 1
+                                       </script>
+            </section>
+
+            <section data-markdown>
+               <script type="text/template">
+                                          <h2>Promise.resolve</h2>
+         const promise = new Promise(resolve => resolve(value));
+                                          <p>For example, the loadCached function below fetches a URL and remembers (caches) its content.</p>
+            
+         const cache = new Map();
+         function loadCached(url) {
+           if (cache.has(url)) {
+             return Promise.resolve(cache.get(url)); // (*)
+           }
+         
+           return fetch(url)
+             .then(response => response.text())
+             .then(text => {
+               cache.set(url,text);
+               return text;
+             });
+         }
+                                       </script>
+            </section>
+
+            <section data-markdown>
+               <script type="text/template">
+                                          <h2>Promise.reject</h2>
+            const promise = new Promise((resolve, reject) => reject(error));
+                                          
+                                       </script>
+            </section>
+
+
+
+
+         </section>
+
+         <section>
+            <section data-markdown>
+               <script type="text/template">
+                                          # Mystification 
+                                          # is not about Promisification
+                                       </script>
+            </section>
+
+            <section data-markdown>
+               <script type="text/template">
+                  For instance, we have loadScript(src, callback).
+
+         function loadScript(src, callback) {
+           const script = document.createElement('script');
+           script.src = src;
+         
+           script.onload = () => callback(null, script);
+           script.onerror = () => callback(new Error(`Script load error for ${src}`));
+         
+           document.head.append(script);
+         }
+         
+         // usage:
+         // loadScript('path/script.js', (err, script) => {...})
+                                       </script>
+            </section>
+
+            <section data-markdown>
+               <script type="text/template">
+                  Let’s promisify it.
+
+         const loadScriptPromise = function(src) {
+            return new Promise((resolve, reject) => {
+              loadScript(src, (err, script) => {
+                if (err) reject(err)
+                else resolve(script);
+              });
+            })
+          }
+          
+          // usage:
+          // loadScriptPromise('path/script.js').then(...)
+                                       </script>
+            </section>
+
+
+
+         </section>
+
+         <section>
+            <section data-markdown>
+               <script type="text/template">
+# little BIG Microtasks
+
+                               </script>
+
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+               const promise = Promise.resolve();
+
+               promise.then(() => alert("promise done!"));
+               
+               alert("code finished"); // this alert shows first     
+                                    </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+                     <h2>Microtasks queue</h2>
+
+                     ![mockup](images/promiseQueue.png)
+                  
+                                    </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+                  Promise.resolve()
+                  .then(() => alert("promise done!"))
+                  .then(() => alert("code finished"));    
+                                    </script>
+            </section>
+
+
+         </section>
+         <section>
+            <section data-markdown>
+               <script type="text/template">
+# You already can't wait? Its time for async/await
+
+                               </script>
+
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+                     <h2>Async functions</h2>
+                  async function f() {
+                  return 1;
+                  }     
+                                    </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+               async function f() {
+               return 1;
+               }
+                
+               f().then(alert); // 1
+                  
+                                    </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+               async function f() {
+               return Promise.resolve(1);
+               }
+                
+               f().then(alert); // 1 
+                                    </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+                   <h2>Await</h2>
+                  
+      // works only inside async functions
+      const value = await promise;
+       
+                                    </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+      async function f(
+      const promise = new Promise((resolve, reject) => {
+      setTimeout(() => resolve("done!"), 1000)
+      });
+       
+      let result = await promise; // wait until the promise resolves (*)
+       
+      alert(result); // "done!"
+      }
+       
+      f();
+                                    </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+      function f() {
+      const promise = Promise.resolve(1);
+      let result = await promise; // Syntax error
+      }
+                                    </script>
+            </section>
+
+            <section data-markdown>
+               <script type="text/template">
+                   <h2>Error handling</h2>
+                  
+                   This code:
+
+
+
+      async function f() {
+      await Promise.reject(new Error("Whoops!"));
+      }
+                   …is the same as this:
+                   
+      async function f() {
+      throw new Error("Whoops!");
+      }
+                                    </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+      async function f(
+      try {
+      let response = await fetch('http://no-such-url');
+      } catch(err) {
+      alert(err); // TypeError: failed to fetch
+      }
+      }
+       
+      f();
+                                    </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+      async function f(
+      try {
+      let response = await fetch('/no-user-here');
+      let user = await response.json();
+      } catch(err) {
+      // catches errors both in fetch and response.json
+      alert(err);
+      }
+      }
+       
+      f();
+                                    </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+
+      async function f() {
+      let response = await fetch('http://no-such-url');
+      }
+       
+      // f() becomes a rejected promise
+      f().catch(alert); // TypeError: failed to fetch // (*)
+                                    </script>
+            </section>
+            <section data-markdown>
+               <script type="text/template">
+                  <h2>Summary</h2>
+                                    </script>
+            </section>
+         </section>
+
+         <section data-markdown>
+            <script type="text/template">
+                  ![mockup](images/thanks.gif)
+                                    </script>
+
+         </section>
+      </div>
+
+   </div>
+
+   <script src="lib/js/head.min.js"></script>
+   <script src="js/reveal.min.js"></script>
+
+   <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+         controls: true,
+         progress: true,
+         history: true,
+         center: true,
+
+         theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+         transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+         // Optional libraries used to extend on reveal.js
+         dependencies: [
+            { src: 'lib/js/classList.js', condition: function () { return !document.body.classList; } },
+            { src: 'plugin/markdown/showdown.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+            { src: 'plugin/markdown/markdown.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+            { src: 'plugin/highlight/highlight.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); } },
+            { src: 'plugin/zoom-js/zoom.js', async: true, condition: function () { return !!document.body.classList; } },
+            { src: 'plugin/notes/notes.js', async: true, condition: function () { return !!document.body.classList; } }
+            // { src: 'plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+         ]
+      });
+
+   </script>
+
+</body>
+
+</html>
